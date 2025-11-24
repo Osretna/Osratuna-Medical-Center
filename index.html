@@ -372,7 +372,7 @@
             { n: "د. محمد شعلان", s: "باطنة/", t: "الأربعاء: 4 - 2 / الجمعة: 3 - 5", c: "باطنة" },
             { n: "د. محمد كمال", s: "باطنة", t: "الاثنين: 6 - 3", c: "باطنة" },
             { n: "د. إنجي يسري", s: "باطنة", t: "الأربعاء: 7 - 5", c: "باطنة" },
-            
+
 
             // --- غدد ---
             { n: "د. بهاء محمود", s: "غدد صماء وسكر", t: "السبت: 3 - 1.30", c: "غدد" },
@@ -551,11 +551,12 @@
     </script>
 
     <!-- الجزء 2: كود FIREBASE (معزول) -->
+    <!-- الجزء 2: كود FIREBASE (تم تحسين رسائل الخطأ) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // استبدل المفاتيح هنا بمعلومات مشروعك الحقيقي
+        // إعدادات مشروعك (كما أرسلتها)
         const firebaseConfig = {
             apiKey: "AIzaSyC7DEhZdEKyhWtMPMeQ6S6IrDB3lyxJ9DU",
             authDomain: "osretna.firebaseapp.com",
@@ -572,58 +573,77 @@
         try {
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
-            console.log("تم الاتصال بقاعدة البيانات");
+            console.log("✅ تم الاتصال بـ Firebase");
         } catch (e) {
-            console.error("خطأ في الاتصال: تأكد من مفاتيح API", e);
+            console.error("❌ خطأ في تهيئة Firebase:", e);
         }
 
         // دالة الحجز
         window.handleBooking = async function (e) {
-            e.preventDefault(); // منع إعادة تحميل الصفحة
+            e.preventDefault();
 
-            // التحقق من أن قاعدة البيانات تعمل
+            // التحقق من التهيئة
             if (!db) {
-                alert("تنبيه: لا يمكن إتمام الحجز لأن قاعدة البيانات غير متصلة.\n(يرجى التأكد من مفاتيح Firebase في الكود)");
+                alert("خطأ برمجي: لم يتم تهيئة قاعدة البيانات بشكل صحيح.");
                 return;
             }
 
             const btn = document.getElementById('submitBtn');
-            btn.innerText = 'جاري الحجز...';
+            const originalText = btn.innerText;
+            btn.innerText = 'جاري الاتصال بالسيرفر...';
             btn.disabled = true;
 
+            // جمع البيانات
             const name = document.getElementById('pName').value;
             const phone = document.getElementById('pPhone').value;
             const type = document.getElementById('pType').value;
             const spec = document.getElementById('pSpecialty').value;
             const docName = document.getElementById('pDoctor').value;
-            const today = new Date().toISOString().split('T')[0];
+
+            // تحديد التاريخ (تم تعديله لضمان التوقيت المحلي)
+            const today = new Date().toLocaleDateString('en-CA'); // يخرج التاريخ بتنسيق YYYY-MM-DD
 
             try {
-                // حساب الدور
+                // 1. حساب الدور
                 const q = query(collection(db, "bookings"), where("doctor", "==", docName), where("date", "==", today));
                 const snap = await getDocs(q);
                 const turn = snap.size + 1;
 
-                // حفظ الحجز
+                // 2. إرسال الحجز
                 await addDoc(collection(db, "bookings"), {
-                    patientName: name, phone: phone, type: type, specialty: spec, doctor: docName,
-                    queueNumber: turn, date: today, createdAt: new Date().toISOString()
+                    patientName: name,
+                    phone: phone,
+                    type: type,
+                    specialty: spec,
+                    doctor: docName,
+                    queueNumber: turn,
+                    date: today,
+                    createdAt: new Date().toISOString()
                 });
 
-                alert(`تم الحجز بنجاح!\n\nالاسم: ${name}\nالدكتور: ${docName}\nرقم الدور: ${turn}`);
+                // نجاح
+                alert(`✅ تم الحجز بنجاح!\n\n👤 الاسم: ${name}\n👨‍⚕️ الدكتور: ${docName}\n🔢 رقم الدور: ${turn}`);
                 document.getElementById('bookingForm').reset();
                 window.switchTab('home');
 
             } catch (err) {
-                console.error(err);
-                alert("حدث خطأ أثناء الحجز، تأكد من الاتصال بالإنترنت.");
+                console.error("Error Detail:", err);
+
+                // رسائل خطأ واضحة
+                if (err.code === 'permission-denied') {
+                    alert("⛔ خطأ في الصلاحيات (Permission Denied)!\nيجب عليك الذهاب لـ Firebase Console وتغيير الـ Rules لتسمح بالكتابة.\n(راجع خطوات الحل المرفقة)");
+                } else if (err.code === 'unavailable') {
+                    alert("📡 لا يوجد اتصال بالإنترنت، أو سيرفر جوجل محجوب.");
+                } else {
+                    alert("حدث خطأ غير متوقع:\n" + err.message);
+                }
             } finally {
-                btn.innerText = 'تأكيد وحجز دور';
+                btn.innerText = originalText;
                 btn.disabled = false;
             }
         }
 
-        // ربط الزر بالدالة يدوياً بعد تحميل الموديول
+        // ربط النموذج
         const form = document.getElementById('bookingForm');
         if (form) {
             form.addEventListener('submit', window.handleBooking);
