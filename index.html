@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>المركز الطبي عصفور</title>
+    <!-- الشعار بجوار اسم الموقع (Favicon) -->
+    <!-- يمكنك تغيير الرابط أدناه برابط صورة الشعار الخاص بكم -->
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3063/3063176.png">
+
+    <!-- الخطوط والأيقونات -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* نفس تنسيقات التصميم السابق مع تحسينات طفيفة */
+        :root {
+            --primary-color: #0d47a1;
+            /* أزرق داكن يليق بمركز عصفور */
+            --accent-color: #2196f3;
+            --bg-color: #f5f7fa;
+            --text-color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 25px 20px;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-img {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            padding: 5px;
+        }
+
+        header div h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        header div p {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Filter Tabs inside Doctors */
+        .filter-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Cards */
+        .doctor-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            border-right: 4px solid var(--accent-color);
+        }
+
+        .doc-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--primary-color);
+        }
+
+        .doc-spec {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .doc-time {
+            font-size: 0.85rem;
+            color: #d32f2f;
+            font-weight: 600;
+            background: #ffebee;
+            padding: 3px 8px;
+            border-radius: 5px;
+            width: fit-content;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        button.btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            text-align: center;
+            color: #999;
+            text-decoration: none;
+            flex: 1;
+            font-size: 0.75rem;
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <!-- شعار المركز (صورة تعبيرية) -->
+        <img src="https://cdn-icons-png.flaticon.com/512/3063/3063176.png" alt="شعار" class="logo-img">
+        <div>
+            <h1>المركز الطبي عصفور</h1>
+            <p>خدمة طبية متميزة لك ولأسرتك</p>
+        </div>
+    </header>
+
+    <!-- الصفحة الرئيسية -->
+    <div id="home" class="section active">
+        <div class="doctor-card" style="text-align: center; border: none; background: #e3f2fd;">
+            <h3>مرحباً بك في تطبيقنا</h3>
+            <p>يمكنك حجز موعد، استعراض جدول الأطباء، ومتابعة حالتك.</p>
+        </div>
+        <h3 style="margin: 15px 0;">الخدمات</h3>
+        <button class="btn-primary" onclick="switchTab('booking')" style="margin-bottom: 10px;">
+            <i class="fas fa-calendar-plus"></i> حجز موعد جديد
+        </button>
+        <button class="btn-primary" onclick="switchTab('doctors')" style="background: var(--accent-color);">
+            <i class="fas fa-user-md"></i> جدول العيادات
+        </button>
+
+        <div style="margin-top: 20px;">
+            <h4>أرقام الحجز والاستعلام:</h4>
+            <p style="direction: ltr; text-align: right; color: #666;">01144441323 - 01006005720</p>
+        </div>
+    </div>
+
+    <!-- صفحة الأطباء (الجدول) -->
+    <div id="doctors" class="section">
+        <h2 style="margin-bottom: 15px;">جدول العيادات</h2>
+
+        <!-- فلاتر التخصصات -->
+        <div class="filter-scroll" id="categoryFilters">
+            <button class="filter-btn active" onclick="filterDoctors('all', this)">الكل</button>
+            <button class="filter-btn" onclick="filterDoctors('باطنة', this)">باطنة</button>
+            <button class="filter-btn" onclick="filterDoctors('أسنان', this)">أسنان</button>
+            <button class="filter-btn" onclick="filterDoctors('عظام', this)">عظام</button>
+            <button class="filter-btn" onclick="filterDoctors('أطفال', this)">أطفال</button>
+            <button class="filter-btn" onclick="filterDoctors('نساء', this)">نساء وتوليد</button>
+            <button class="filter-btn" onclick="filterDoctors('أنف', this)">أنف وأذن</button>
+            <button class="filter-btn" onclick="filterDoctors('جلدية', this)">جلدية</button>
+            <button class="filter-btn" onclick="filterDoctors('قلب', this)">قلب</button>
+        </div>
+
+        <!-- مكان ظهور كروت الأطباء -->
+        <div id="doctorsList"></div>
+    </div>
+
+    <!-- صفحة الحجز -->
+    <div id="booking" class="section">
+        <h2 style="margin-bottom: 15px;">حجز موعد</h2>
+        <form id="bookingForm">
+            <div class="form-group">
+                <label>اسم المريض</label>
+                <input type="text" id="pName" required>
+            </div>
+            <div class="form-group">
+                <label>رقم الموبايل</label>
+                <input type="tel" id="pPhone" required>
+            </div>
+            <div class="form-group">
+                <label>التخصص</label>
+                <select id="pSpecialty" onchange="updateDoctorsInForm()">
+                    <option value="">اختر التخصص</option>
+                    <option value="باطنة">باطنة</option>
+                    <option value="أسنان">أسنان</option>
+                    <option value="عظام">عظام</option>
+                    <option value="أطفال">أطفال</option>
+                    <option value="نساء">نساء وتوليد</option>
+                    <option value="أنف">أنف وأذن</option>
+                    <option value="جلدية">جلدية</option>
+                    <option value="قلب">القلب</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>الدكتور</label>
+                <select id="pDoctor">
+                    <option value="">اختر التخصص أولاً</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primary">تأكيد الحجز</button>
+        </form>
+    </div>
+
+    <!-- البار السفلي -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="switchTab('home', this)"><i class="fas fa-home"></i>الرئيسية</a>
+        <a href="#" class="nav-item" onclick="switchTab('booking', this)"><i class="fas fa-calendar-check"></i>حجز</a>
+        <a href="#" class="nav-item" onclick="switchTab('doctors', this)"><i class="fas fa-user-doctor"></i>العيادات</a>
+    </nav>
+
+    <!-- ========================================== -->
+    <!--  كود FIREBASE (يجب تعديل الإعدادات هنا)    -->
+    <!-- ========================================== -->
+    <script type="module">
+        // استيراد دوال Firebase الأساسية
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- هام جداً: استبدل البيانات التالية ببيانات مشروعك من Firebase Console ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7DEhZdEKyhWtMPMeQ6S6IrDB3lyxJ9DU",
+            authDomain: "osretna.firebaseapp.com",
+            databaseURL: "https://osretna-default-rtdb.firebaseio.com",
+            projectId: "osretna",
+            storageBucket: "osretna.firebasestorage.app",
+            messagingSenderId: "891601757154",
+            appId: "1:891601757154:web:19a8fab19ee8dc3d208fbb",
+            measurementId: "G-TCB8XP9C87"
+        };
+
+        // تهيئة Firebase
+        let app, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            console.log("تم الاتصال بـ Firebase بنجاح");
+        } catch (error) {
+            console.error("خطأ في إعدادات Firebase (هل وضعت المفاتيح الصحيحة؟)", error);
+        }
+
+        // دالة إرسال الحجز إلى Firebase
+        window.handleBooking = async function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById('pName').value;
+            const phone = document.getElementById('pPhone').value;
+            const doctor = document.getElementById('pDoctor').value;
+
+            if (!db) {
+                alert("لم يتم ربط قاعدة البيانات بشكل صحيح. يرجى مراجعة إعدادات Firebase في الكود.");
+                return;
+            }
+
+            try {
+                const docRef = await addDoc(collection(db, "bookings"), {
+                    patientName: name,
+                    phone: phone,
+                    doctor: doctor,
+                    date: new Date().toISOString()
+                });
+                alert("تم الحجز بنجاح! رقم الحجز المرجعي: " + docRef.id);
+                document.getElementById('bookingForm').reset();
+                switchTab('home');
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert("حدث خطأ أثناء الحجز، تأكد من الاتصال بالإنترنت.");
+            }
+        }
+
+        // ربط النموذج بدالة الحجز
+        document.getElementById('bookingForm').addEventListener('submit', window.handleBooking);
+    </script>
+
+    <!-- كود البيانات والتفاعل (JavaScript) -->
+    <script>
+        // 1. قاعدة بيانات الأطباء (من ملف PDF المرفق)
+        // قمت بإدخال عينة كبيرة من البيانات لتعمل عليها، يمكنك إضافة الباقي بنفس الطريقة
+        const doctorsData = [
+            // باطنة
+            { name: "د. سهام", spec: "باطنة", time: "السبت: 1 - 10", category: "باطنة" },
+            { name: "د. منار فاروق", spec: "باطنة", time: "السبت: 3 - 12 / الاثنين 7-3", category: "باطنة" },
+            { name: "د. هناء عمر", spec: "باطنة", time: "السبت: 5 - 3 / الخميس 2-7", category: "باطنة" },
+            { name: "د. أميمة فؤاد", spec: "باطنة", time: "الأحد: 6-5 / الاثنين 1-10", category: "باطنة" },
+
+            // أسنان (مجمعة)
+            { name: "د. أحمد عبد المنعم", spec: "أسنان 1", time: "السبت: 5-11 / الأحد 4-1", category: "أسنان" },
+            { name: "د. طريف كمال", spec: "أسنان 3", time: "السبت: 5-11 / الاثنين 3-9", category: "أسنان" },
+            { name: "د. محمد العدل", spec: "أسنان 2", time: "السبت: 1-10 / الأحد 6-5", category: "أسنان" },
+
+            // عظام
+            { name: "د. خالد حسني", spec: "عظام", time: "السبت: 1-10", category: "عظام" },
+            { name: "د. أحمد حجاج", spec: "عظام", time: "السبت: 3-12", category: "عظام" },
+            { name: "د. محمد عرفة", spec: "عظام", time: "الأحد 7-3:30 / الخميس 7-3:30", category: "عظام" },
+
+            // نساء وتوليد
+            { name: "د. محمد مسلم", spec: "نسا وتوليد", time: "السبت: 2-12", category: "نساء" },
+            { name: "د. آمال طه", spec: "نسا وتوليد", time: "السبت: 2-4 / الاثنين 4-2", category: "نساء" },
+            { name: "د. نهلة السيد", spec: "نسا وتوليد", time: "الأحد: 5-3 / الأربعاء 5-3", category: "نساء" },
+
+            // أنف وأذن
+            { name: "د. محمد صلاح", spec: "أنف وأذن", time: "السبت: 1-11 / الأحد 6-5", category: "أنف" },
+            { name: "د. نادر الفقي", spec: "أنف وأذن", time: "السبت: 4-1:30 / الاثنين 3-1:30", category: "أنف" },
+
+            // أطفال
+            { name: "د. أحمد حازم", spec: "أطفال", time: "الأحد: 1-11", category: "أطفال" },
+            { name: "د. روضة عبد الفتاح", spec: "أطفال", time: "الأحد: 2-11 / الثلاثاء 2-10", category: "أطفال" },
+
+            // قلب
+            { name: "د. محمود النجار", spec: "القلب", time: "السبت: 4-11 / الأربعاء 1-11", category: "قلب" },
+            { name: "د. سعيد إبراهيم", spec: "القلب", time: "الاثنين والثلاثاء", category: "قلب" },
+
+            // جراحة
+            { name: "د. عمر حسين", spec: "الجراحة", time: "السبت 1-10 / الأحد 1-10", category: "جراحة" },
+            { name: "د. محمد الصادق", spec: "الجراحة", time: "الأحد 7-2", category: "جراحة" }
+        ];
+
+        // دالة عرض الأطباء
+        function renderDoctors(filter = 'all') {
+            const container = document.getElementById('doctorsList');
+            container.innerHTML = '';
+
+            const filtered = filter === 'all' ? doctorsData : doctorsData.filter(d => d.category.includes(filter));
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:20px;">لا يوجد أطباء في هذا القسم حالياً</p>';
+                return;
+            }
+
+            filtered.forEach(doc => {
+                const card = `
+                    <div class="doctor-card">
+                        <div class="doc-name">${doc.name}</div>
+                        <div class="doc-spec"><i class="fas fa-stethoscope"></i> ${doc.spec}</div>
+                        <div class="doc-time"><i class="far fa-clock"></i> ${doc.time}</div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        // دالة فلترة الأطباء
+        function filterDoctors(cat, btn) {
+            // تحديث شكل الأزرار
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderDoctors(cat);
+        }
+
+        // تحديث قائمة الأطباء في صفحة الحجز عند اختيار التخصص
+        function updateDoctorsInForm() {
+            const special = document.getElementById('pSpecialty').value;
+            const doctorSelect = document.getElementById('pDoctor');
+
+            doctorSelect.innerHTML = '<option value="">اختر الدكتور</option>';
+
+            const availableDocs = doctorsData.filter(d => d.category.includes(special));
+            availableDocs.forEach(doc => {
+                const option = document.createElement('option');
+                option.value = doc.name;
+                option.text = doc.name;
+                doctorSelect.appendChild(option);
+            });
+        }
+
+        // دالة التنقل بين الصفحات
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            if (element) {
+                document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                element.classList.add('active');
+            }
+            window.scrollTo(0, 0);
+        }
+
+        // تشغيل عند التحميل
+        window.onload = function () {
+            renderDoctors('all');
+        };
+    </script>
+</body>
+
+</html>
