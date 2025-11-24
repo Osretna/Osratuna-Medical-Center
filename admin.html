@@ -4,79 +4,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة المركز الطبي عصفور</title>
+    <title>لوحة تحكم الاستقبال - مركز عصفور</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3063/3063176.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- مكتبة SheetJS للتصدير -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
         body {
             font-family: 'Cairo', sans-serif;
-            background-color: #e9ecef;
+            background-color: #f4f6f9;
         }
 
-        .login-box {
+        .login-container {
             max-width: 400px;
-            margin: 80px auto;
+            margin: 100px auto;
             background: white;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .dashboard {
+        .dashboard-container {
             display: none;
             padding: 20px;
         }
 
         .table-responsive {
             background: white;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 15px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* تمييز رقم الدور بشكل واضح */
+        .queue-badge {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding: 5px 12px;
+            border-radius: 50%;
+            border: 2px solid #0d47a1;
         }
     </style>
 </head>
 
 <body>
 
-    <div id="loginSection" class="login-box">
-        <h4 class="text-center mb-4 text-primary">تسجيل دخول الإدارة</h4>
+    <div id="loginSection" class="login-container">
+        <h3 class="text-center mb-4 text-primary">دخول الموظفين</h3>
         <form id="loginForm">
-            <input type="email" id="email" class="form-control mb-3" placeholder="البريد الإلكتروني" required>
-            <input type="password" id="password" class="form-control mb-3" placeholder="كلمة المرور" required>
+            <div class="mb-3"><input type="email" id="email" class="form-control" placeholder="admin@center.com"
+                    required></div>
+            <div class="mb-3"><input type="password" id="password" class="form-control" required></div>
             <button type="submit" class="btn btn-primary w-100">دخول</button>
         </form>
     </div>
 
-    <div id="dashboardSection" class="dashboard">
+    <div id="dashboardSection" class="dashboard-container">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="text-primary">سجل الحجوزات اليومية</h3>
+            <h2 class="text-primary">سجل الحجوزات</h2>
             <div>
-                <button onclick="exportToExcel()" class="btn btn-success"><i class="fas fa-file-excel"></i> تصدير للخبير
-                    (Excel)</button>
-                <button onclick="logout()" class="btn btn-danger ms-2">خروج</button>
+                <button onclick="exportToExcel()" class="btn btn-success btn-sm me-2">
+                    <i class="fas fa-file-excel"></i> تحميل Excel كامل
+                </button>
+                <button onclick="logout()" class="btn btn-danger btn-sm">خروج</button>
             </div>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-bordered table-hover" id="exportTable">
+            <!-- الجدول يحتوي على الأعمدة المطلوبة للإكسيل -->
+            <table class="table table-hover align-middle text-center" id="fullTable">
                 <thead class="table-light">
                     <tr>
                         <th>رقم الدور</th>
                         <th>اسم المريض</th>
                         <th>رقم الهاتف</th>
-                        <th>نوع الجهة</th>
-                        <th>التخصص</th>
-                        <th>الطبيب المعالج</th>
-                        <th>تاريخ الحجز</th>
-                        <th class="no-print">إجراء</th>
+                        <th>نوع الحجز</th>
+                        <th>العيادة / الطبيب</th>
+                        <th>التاريخ</th>
+                        <th class="no-export">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="bookingsTable">
                     <!-- البيانات ستظهر هنا -->
                 </tbody>
             </table>
+            <p id="loadingMsg" class="text-center text-muted">جاري تحميل البيانات...</p>
         </div>
     </div>
+
+    <!-- كود تصدير الإكسيل (يعتمد على الجدول الظاهر) -->
+    <script>
+        function exportToExcel() {
+            var table = document.getElementById("fullTable");
+            var data = [];
+
+            // إضافة العناوين يدوياً لضمان الترتيب
+            var headers = ["رقم الدور", "اسم المريض", "رقم الهاتف", "نوع الحجز", "العيادة / الطبيب", "تاريخ الحجز"];
+            data.push(headers);
+
+            var rows = table.querySelectorAll("tbody tr");
+            rows.forEach(row => {
+                var cols = row.querySelectorAll("td");
+                if (cols.length > 1) { // التأكد أن الصف به بيانات
+                    var rowData = [];
+                    rowData.push(cols[0].innerText.trim()); // رقم الدور
+                    rowData.push(cols[1].innerText.trim()); // الاسم
+                    rowData.push(cols[2].innerText.trim()); // الهاتف
+                    rowData.push(cols[3].innerText.trim()); // النوع
+                    rowData.push(cols[4].innerText.replace(/\n/g, " ").trim()); // الطبيب
+                    rowData.push(cols[5].innerText.trim()); // التاريخ
+                    data.push(rowData);
+                }
+            });
+
+            var ws = XLSX.utils.aoa_to_sheet(data);
+
+            // تنسيق عرض الأعمدة
+            ws['!cols'] = [{ wch: 10 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 30 }, { wch: 15 }];
+
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "حجوزات المركز");
+            var today = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `Osfour_Bookings_${today}.xlsx`);
+        }
+    </script>
 
     <!-- Firebase Logic -->
     <script type="module">
@@ -84,6 +139,7 @@
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, query, orderBy, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // مفاتيح مشروعك (تعمل بنجاح)
         const firebaseConfig = {
             apiKey: "AIzaSyC7DEhZdEKyhWtMPMeQ6S6IrDB3lyxJ9DU",
             authDomain: "osretna.firebaseapp.com",
@@ -95,9 +151,16 @@
             measurementId: "G-TCB8XP9C87"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            console.log("Firebase Connected");
+        } catch (e) {
+            console.error(e);
+            alert("خطأ في الاتصال بالسيرفر");
+        }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -113,61 +176,57 @@
         document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
             signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
-                .catch(err => alert("بيانات الدخول غير صحيحة"));
+                .catch((error) => alert("خطأ: " + error.message));
         });
 
         function loadBookings() {
-            const q = query(collection(db, "bookings"), orderBy("dateString", "desc"), orderBy("queueNumber", "asc"));
+            // عدلت الاستعلام هنا ليكون بسيطاً (ترتيب بالتاريخ فقط) لتجنب خطأ التوقف
+            const q = query(collection(db, "bookings"), orderBy("date", "desc"));
+
             onSnapshot(q, (snapshot) => {
                 const tbody = document.getElementById('bookingsTable');
                 tbody.innerHTML = '';
+                document.getElementById('loadingMsg').style.display = 'none';
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">لا توجد حجوزات مسجلة</td></tr>';
+                    return;
+                }
+
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    tbody.innerHTML += `
+
+                    // تحضير البيانات للعرض
+                    const qNum = data.queueNumber || '-';
+                    const bType = data.type || 'غير محدد';
+                    const docInfo = `${data.doctor}<br><small class="text-muted">${data.specialty}</small>`;
+
+                    // رسم الصف في الجدول
+                    const row = `
                         <tr>
-                            <td style="font-weight:bold; color:red;">${data.queueNumber}</td>
-                            <td>${data.patientName}</td>
+                            <td><span class="queue-badge">${qNum}</span></td>
+                            <td class="fw-bold">${data.patientName}</td>
                             <td>${data.phone}</td>
-                            <td>${data.type}</td>
-                            <td>${data.specialty}</td>
-                            <td>${data.doctor}</td>
-                            <td>${data.dateString}</td>
-                            <td class="no-print"><button onclick="window.del('${docSnap.id}')" class="btn btn-sm btn-outline-danger">حذف</button></td>
+                            <td><span class="badge bg-secondary">${bType}</span></td>
+                            <td>${docInfo}</td>
+                            <td>${data.date}</td>
+                            <td>
+                                <button onclick="window.deleteBooking('${docSnap.id}')" class="btn btn-outline-danger btn-sm">حذف</button>
+                            </td>
                         </tr>
                     `;
+                    tbody.innerHTML += row;
                 });
+            }, (error) => {
+                console.error("Error loading docs: ", error);
+                document.getElementById('loadingMsg').innerText = "حدث خطأ في تحميل البيانات (يرجى مراجعة الصلاحيات)";
             });
         }
 
-        window.del = async (id) => { if (confirm('حذف الحجز؟')) await deleteDoc(doc(db, "bookings", id)); };
+        window.deleteBooking = async (id) => {
+            if (confirm('هل أنت متأكد من الحذف؟')) await deleteDoc(doc(db, "bookings", id));
+        };
         window.logout = () => signOut(auth);
-    </script>
-
-    <!-- كود التصدير لملف Excel منظم -->
-    <script>
-        function exportToExcel() {
-            var table = document.getElementById("exportTable");
-            var rows = table.rows;
-            var csvContent = "\uFEFF"; // لدعم العربية
-
-            for (var i = 0; i < rows.length; i++) {
-                var row = [], cols = rows[i].querySelectorAll("td, th");
-                // تجاهل العمود الأخير (زر الحذف) عند التصدير
-                for (var j = 0; j < cols.length - 1; j++) {
-                    // وضع علامات تنصيص لضمان عدم تداخل الأعمدة
-                    let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
-                    row.push('"' + data + '"');
-                }
-                csvContent += row.join(",") + "\r\n";
-            }
-
-            var encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
-            var link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Asfour_Bookings_ExpertSystem.csv");
-            document.body.appendChild(link);
-            link.click();
-        }
     </script>
 </body>
 
